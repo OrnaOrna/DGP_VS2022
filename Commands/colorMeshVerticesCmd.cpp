@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#include "Utils/Utilities.h"
+
 #include "colorMeshVerticesCmd.h"
 
 #include "Utils/STL_Macros.h"
@@ -8,6 +10,11 @@
 #include "Utils/MatlabInterface.h"
 #include "Utils/GMM_Macros.h"
 #include "Utils/MatlabGMMDataExchange.h"
+
+
+#define MINARG "-min"
+#define MAXARG "-max"
+
 
 
 void colorVertexByValence(const unsigned int valence, float* vertexColor)
@@ -58,6 +65,16 @@ void colorVertexByValence(const unsigned int valence, float* vertexColor)
 	}
 }
 
+double getAngleBetweenVertices(const MPoint& left, const MPoint& center, const MPoint& right) {
+	const MVector u = center - left;
+	const MVector v = center - right;
+
+	const double cosine = u * v / (u.length() * v.length());
+	return acos(cosine);
+}
+
+
+
 colorMeshVerticesCmd::colorMeshVerticesCmd()
 {
 
@@ -101,8 +118,8 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 
 	MSyntax commandSyntax = syntax();
 	commandSyntax.addArg(MSyntax::kString);
-	commandSyntax.addFlag("-min", "-min", MSyntax::kDouble);
-	commandSyntax.addFlag("-max", "-max", MSyntax::kDouble);
+	commandSyntax.addFlag(MINARG, MINARG, MSyntax::kDouble);
+	commandSyntax.addFlag(MAXARG, MAXARG, MSyntax::kDouble);
 
 	MArgDatabase argData(commandSyntax, argList, &stat);
 	MCHECKERROR(stat, "Wrong syntax for command " + commandName());
@@ -164,9 +181,7 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 			int curIndex = vertex_it.index();
 
 			MIntArray connectedVertices;
-			stat = vertex_it.getConnectedVertices(connectedVertices);
-			MCHECKERROR(stat, "Error getting connected vertices");
-
+			vertex_it.getConnectedVertices(connectedVertices);
 			unsigned int valence = connectedVertices.length();
 
 			float vertexColor[3];
@@ -179,6 +194,61 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 
 		meshFn.setVertexColors(colors, vertexList);
 		meshFn.setDisplayColors(true);
+
+	} else if (colorBy == "curvature" || colorBy == "Curvature") {
+		// Get values of min, max flags
+		double minCurvature = -M_PI, maxCurvate = M_PI;
+		if (argData.isFlagSet(MINARG)) {
+			minCurvature = argData.flagArgumentDouble(MINARG, 1);
+		}
+		if (argData.isFlagSet(MAXARG)) {
+			maxCurvate = argData.flagArgumentDouble(MAXARG, 1);
+		}
+
+
+		MString s1 = meshFn.createColorSetWithName("CurvatureColorSet");
+		meshFn.setCurrentColorSetName(s1);
+
+		MItMeshVertex vertex_it(meshFn.object());
+		MIntArray vertexList;
+		MColorArray colors;
+
+		while (!vertex_it.isDone())
+		{
+			int curIndex = vertex_it.index();
+
+			double curvature = 0;
+
+			// Calculate Gaussian curvature from non-closed neighboring points
+			MPoint pos = vertex_it.position();
+			MIntArray connectedVertices;
+			vertex_it.getConnectedVertices(connectedVertices);
+			for (unsigned i = 0; i < connectedVertices.length() - 1; ++i) {
+				MPoint left, right;
+				meshFn.getPoint(connectedVertices[i], left);
+				meshFn.getPoint(connectedVertices[i + 1], right);
+				curvature -= getAngleBetweenVertices(left, pos, right);
+			}
+
+			if (vertex_it.onBoundary()) {
+				curvature += M_PI;
+			} else {
+				curvature += 2*M_PI;
+				MPoint left, right;
+				meshFn.getPoint(connectedVertices[connectedVertices.length() - 1], left);
+				meshFn.getPoint(connectedVertices[0], right);
+				curvature -= getAngleBetweenVertices(left, pos, right);
+			}
+
+
+			float R, G, B;
+			mapColor(curvature, R, G, B, minCurvature, maxCurvate);
+			colors.append(R, G, B);
+
+			vertexList.append(curIndex);
+			vertex_it.next();
+		}
+
 	}
 
 
