@@ -10,6 +10,54 @@
 #include "Utils/MatlabGMMDataExchange.h"
 
 
+void colorVertexByValence(const unsigned int valence, float* vertexColor)
+{
+	if (valence >= 9) {
+		vertexColor[0] = 1.0f;
+		vertexColor[1] = 0.0f;
+		vertexColor[2] = 0.0f;
+	}
+	else if (valence <= 3) {
+		vertexColor[0] = 0.5f;
+		vertexColor[1] = 0.0f;
+		vertexColor[2] = 1.0f;
+	}
+	else switch (valence) {
+	case 8: {
+		vertexColor[0] = 0.0f;
+		vertexColor[1] = 0.0f;
+		vertexColor[2] = 1.0f;
+		break;
+	}
+	case 7: {
+		vertexColor[0] = 1.0f;
+		vertexColor[1] = 1.0f;
+		vertexColor[2] = 0.5f;
+		break;
+	}
+	case 6: {
+		vertexColor[0] = 0.0f;
+		vertexColor[1] = 1.0f;
+		vertexColor[2] = 0.0f;
+		break;
+	}
+	case 5: {
+		vertexColor[0] = 1.0f;
+		vertexColor[1] = 0.0;
+		vertexColor[2] = 1.0f;
+		break;
+	}
+	case 4: {
+		vertexColor[0] = 0.0f;
+		vertexColor[1] = 1.0f;
+		vertexColor[2] = 1.0f;
+		break;
+	}
+	default:
+		break;
+	}
+}
+
 colorMeshVerticesCmd::colorMeshVerticesCmd()
 {
 
@@ -52,6 +100,10 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 
 
 	MSyntax commandSyntax = syntax();
+	commandSyntax.addArg(MSyntax::kString);
+	commandSyntax.addFlag("-min", "-min", MSyntax::kDouble);
+	commandSyntax.addFlag("-max", "-max", MSyntax::kDouble);
+
 	MArgDatabase argData(commandSyntax, argList, &stat);
 	MCHECKERROR(stat, "Wrong syntax for command " + commandName());
 
@@ -76,6 +128,7 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 	MItMeshPolygon poly(meshObject);
 	if(!poly.isPlanar(&stat) || poly.isLamina(&stat) || poly.isHoled(&stat))
 	{
+		
 		MCHECKERROR(MS::kFailure, "The given polygon shape is either self intersecting, holed or non-planar which are not supported");
 	}
 
@@ -89,41 +142,50 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 	}
 	
 	/***************** this part should be changed ****************/
+	// Delete the color sets if they exist
 	meshFn.deleteColorSet("ExampleColorSet");
-	MString s1 = meshFn.createColorSetWithName("ExampleColorSet");
-	meshFn.setCurrentColorSetName( s1 );
+	meshFn.deleteColorSet("ValenceColorSet");
+	meshFn.deleteColorSet("CurvatureColorSet");
 
-	MItMeshVertex vertex_it(meshFn.object());
-	MIntArray vertexList;
-	MColorArray colors;
+	MString colorBy = argList.asString(0);
 
-	int curIndex,mod;
+	if (colorBy == "valence" || colorBy == "Valence") {
+		MString s1 = meshFn.createColorSetWithName("ValenceColorSet");
+		meshFn.setCurrentColorSetName(s1);
 
-	while ( !vertex_it.isDone() )
-	{
-		curIndex = vertex_it.index();
-		mod = curIndex%3;
-		switch ( mod )
+		MItMeshVertex vertex_it(meshFn.object());
+		MIntArray vertexList;
+		MColorArray colors;
+
+		int curIndex, mod;
+
+		while (!vertex_it.isDone())
 		{
-		case 0:
-			colors.append( 1.0f , 0.0f , 0.0f );
-			break;
-		case 1:
-			colors.append( 0.0f , 1.0f , 0.0f );
-			break;
-		case 2: 
-			colors.append( 0.0f , 0.0f , 1.0f  );
-			break;
+			int curIndex = vertex_it.index();
+
+			MIntArray connectedVertices;
+			stat = vertex_it.getConnectedVertices(connectedVertices);
+			MCHECKERROR(stat, "Error getting connected vertices");
+
+			unsigned int valence = connectedVertices.length();
+
+			float vertexColor[3];
+			colorVertexByValence(valence, vertexColor);
+			colors.append(vertexColor[0], vertexColor[1], vertexColor[2]);
+
+			vertexList.append(curIndex);
+			vertex_it.next();
 		}
-		vertexList.append( curIndex );
-		vertex_it.next();
+
+		meshFn.setVertexColors(colors, vertexList);
+		meshFn.setDisplayColors(true);
 	}
 
-	meshFn.setVertexColors ( colors , vertexList );	
-	meshFn.setDisplayColors( true );
+
 	/**************************************************************/
 
 	return MS::kSuccess;}
+
 
 MSyntax colorMeshVerticesCmd::syntax()
 {
