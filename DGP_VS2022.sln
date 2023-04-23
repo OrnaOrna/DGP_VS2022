@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32328.378
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DGP", "DGP\DGP_VS2022.vcxproj", "{C1596D2B-B417-4E9A-8CF5-EB45B209943B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DGP_VS2022", "DGP\DGP_VS2022.vcxproj", "{C1596D2B-B417-4E9A-8CF5-EB45B209943B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +18,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4EF2FFE2-AA8B-4144-9477-8F1612464F03}
 	EndGlobalSection
 EndGlobal

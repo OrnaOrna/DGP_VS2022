@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Commands\colorMeshVerticesCmd.cpp" />
+    <ClCompile Include="..\Commands\inverseMatrixCmd.cpp" />
     <ClCompile Include="..\Commands\TriangulatePolygonCmd.cpp" />
     <ClCompile Include="..\Nodes\SpaceDeformer2D.cpp" />
     <ClCompile Include="..\stdafx.cpp" />
@@ -26,6 +27,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Commands\colorMeshVerticesCmd.h" />
+    <ClInclude Include="..\Commands\inverseMatrixCmd.h" />
     <ClInclude Include="..\Commands\TriangulatePolygonCmd.h" />
     <ClInclude Include="..\Nodes\SpaceDeformer2D.h" />
     <ClInclude Include="..\stdafx.h" />

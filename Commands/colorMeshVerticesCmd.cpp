@@ -7,9 +7,7 @@
 #include "Utils/STL_Macros.h"
 #include "Utils/Maya_Macros.h"
 #include "Utils/Maya_Utils.h"
-#include "Utils/MatlabInterface.h"
 #include "Utils/GMM_Macros.h"
-#include "Utils/MatlabGMMDataExchange.h"
 
 
 #define MINARG "-min"
@@ -99,25 +97,9 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 {
 	MStatus stat = MS::kSuccess;
 
-	//This code is here just as an example of how to use the Matlab interface.
-	//You code for inverting a matrix should be written as part of a new Maya command with the name "inverseMatrixCmd�.
-	//test Matlab engine
-	if (0)
-	{
-		MatlabInterface::GetEngine().EvalToCout("My_Matrix = [1 2 3; 4 5 6]"); //creates a 2x3 matrix with name My_Matrix
-		GMMDenseColMatrix M(2, 4);
-		M(0, 0) = 8.0;
-		M(1, 2) = -4.0;
-		int result = MatlabGMMDataExchange::SetEngineDenseMatrix("M", M);
-
-		GMMDenseColMatrix My_Matrix;
-		result = MatlabGMMDataExchange::GetEngineDenseMatrix("My_Matrix", My_Matrix);
-		cout << "printing the GMM Matrix: " <<  My_Matrix << endl;
-	}
 
 
 	MSyntax commandSyntax = syntax();
-	commandSyntax.addArg(MSyntax::kString);
 	commandSyntax.addFlag(MINARG, MINARG, MSyntax::kDouble);
 	commandSyntax.addFlag(MAXARG, MAXARG, MSyntax::kDouble);
 
@@ -164,97 +146,85 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 	meshFn.deleteColorSet("ValenceColorSet");
 	meshFn.deleteColorSet("CurvatureColorSet");
 
-	MString colorBy = argList.asString(0);
 
-	if (colorBy == "valence" || colorBy == "Valence") {
-		MString s1 = meshFn.createColorSetWithName("ValenceColorSet");
-		meshFn.setCurrentColorSetName(s1);
+	MString s1 = meshFn.createColorSetWithName("ValenceColorSet");
+	MString s2 = meshFn.createColorSetWithName("CurvatureColorSet");
 
-		MItMeshVertex vertex_it(meshFn.object());
-		MIntArray vertexList;
-		MColorArray colors;
+	MItMeshVertex vertex_it(meshFn.object());
+	MIntArray valenceVertexList, curvatureVertexList;
+	MColorArray valenceColors, curvatureColors;
 
-		int curIndex, mod;
+	while (!vertex_it.isDone()) {
+		int curIndex = vertex_it.index();
 
-		while (!vertex_it.isDone())
-		{
-			int curIndex = vertex_it.index();
+		MIntArray connectedVertices;
+		vertex_it.getConnectedVertices(connectedVertices);
+		unsigned int valence = connectedVertices.length();
 
-			MIntArray connectedVertices;
-			vertex_it.getConnectedVertices(connectedVertices);
-			unsigned int valence = connectedVertices.length();
+		float vertexColor[3];
+		colorVertexByValence(valence, vertexColor);
+		valenceColors.append(vertexColor[0], vertexColor[1], vertexColor[2]);
 
-			float vertexColor[3];
-			colorVertexByValence(valence, vertexColor);
-			colors.append(vertexColor[0], vertexColor[1], vertexColor[2]);
+		valenceVertexList.append(curIndex);
+		vertex_it.next();
+	}
 
-			vertexList.append(curIndex);
-			vertex_it.next();
-		}
+	meshFn.setVertexColors(valenceColors, valenceVertexList);
+	meshFn.setDisplayColors(true);
 
-		meshFn.setVertexColors(colors, vertexList);
-		meshFn.setDisplayColors(true);
-
-	} else if (colorBy == "curvature" || colorBy == "Curvature") {
-		// Get values of min, max flags
-		double minCurvature = -M_PI, maxCurvate = M_PI;
-		if (argData.isFlagSet(MINARG)) {
-			minCurvature = argData.flagArgumentDouble(MINARG, 1);
-		}
-		if (argData.isFlagSet(MAXARG)) {
-			maxCurvate = argData.flagArgumentDouble(MAXARG, 1);
-		}
-
-
-		MString s1 = meshFn.createColorSetWithName("CurvatureColorSet");
-		meshFn.setCurrentColorSetName(s1);
-
-		MItMeshVertex vertex_it(meshFn.object());
-		MIntArray vertexList;
-		MColorArray colors;
-
-		while (!vertex_it.isDone())
-		{
-			int curIndex = vertex_it.index();
-
-			double curvature = 0;
-
-			// Calculate Gaussian curvature from non-closed neighboring points
-			MPoint pos = vertex_it.position();
-			MIntArray connectedVertices;
-			vertex_it.getConnectedVertices(connectedVertices);
-			for (unsigned i = 0; i < connectedVertices.length() - 1; ++i) {
-				MPoint left, right;
-				meshFn.getPoint(connectedVertices[i], left);
-				meshFn.getPoint(connectedVertices[i + 1], right);
-				curvature -= getAngleBetweenVertices(left, pos, right);
-			}
-
-			if (vertex_it.onBoundary()) {
-				curvature += M_PI;
-			} else {
-				curvature += 2*M_PI;
-				MPoint left, right;
-				meshFn.getPoint(connectedVertices[connectedVertices.length() - 1], left);
-				meshFn.getPoint(connectedVertices[0], right);
-				curvature -= getAngleBetweenVertices(left, pos, right);
-			}
-
-
-			float R, G, B;
-			mapColor(curvature, R, G, B, minCurvature, maxCurvate);
-			colors.append(R, G, B);
-
-			vertexList.append(curIndex);
-			vertex_it.next();
-		}
-
+	// Get values of min, max flags
+	double minCurvature = -M_PI, maxCurvate = M_PI;
+	if (argData.isFlagSet(MINARG)) {
+		minCurvature = argData.flagArgumentDouble(MINARG, 1);
+	}
+	if (argData.isFlagSet(MAXARG)) {
+		maxCurvate = argData.flagArgumentDouble(MAXARG, 1);
 	}
 
 
+	vertex_it = meshFn.object();
+	while (!vertex_it.isDone())
+	{
+		int curIndex = vertex_it.index();
+
+		double curvature = 0;
+
+		// Calculate Gaussian curvature from non-closed neighboring points
+		MPoint pos = vertex_it.position();
+		MIntArray connectedVertices;
+		vertex_it.getConnectedVertices(connectedVertices);
+		for (unsigned i = 0; i < connectedVertices.length() - 1; ++i) {
+			MPoint left, right;
+			meshFn.getPoint(connectedVertices[i], left);
+			meshFn.getPoint(connectedVertices[i + 1], right);
+			curvature -= getAngleBetweenVertices(left, pos, right);
+		}
+
+		if (vertex_it.onBoundary()) {
+			curvature += M_PI;
+		} else {
+			curvature += 2*M_PI;
+			MPoint left, right;
+			meshFn.getPoint(connectedVertices[connectedVertices.length() - 1], left);
+			meshFn.getPoint(connectedVertices[0], right);
+			curvature -= getAngleBetweenVertices(left, pos, right);
+		}
+
+
+		float R, G, B;
+		mapColor(curvature, R, G, B, minCurvature, maxCurvate);
+		curvatureColors.append(R, G, B);
+
+		curvatureVertexList.append(curIndex);
+		vertex_it.next();
+	}
+
+	meshFn.setVertexColors(curvatureColors, curvatureVertexList);
+	meshFn.setDisplayColors(true);
 	/**************************************************************/
 
-	return MS::kSuccess;}
+	return MS::kSuccess;
+}
 
 
 MSyntax colorMeshVerticesCmd::syntax()

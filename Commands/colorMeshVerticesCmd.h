@@ -1,12 +1,9 @@
 #pragma once
 
-
-
 class colorMeshVerticesCmd : public MPxCommand
 {
 
 public:
-
 	colorMeshVerticesCmd();							
 	virtual MStatus	doIt(const MArgList& argList);
 	static void* creator();							

@@ -12,6 +12,7 @@
 #include "Utils/Maya_Macros.h"
 
 #include "Commands/colorMeshVerticesCmd.h"
+#include "Commands/inverseMatrixCmd.h"
 
 MStatus initializePlugin(MObject obj)
 { 
@@ -27,6 +28,8 @@ MStatus initializePlugin(MObject obj)
 	REGISTER_NODE(plugin, MPxNode::kDeformerNode, SpaceDeformer2D, NULL);
 	REGISTER_COMMAND_WITH_SYNTAX(plugin, TriangulatePolygonCmd);
 	REGISTER_COMMAND_WITH_SYNTAX(plugin, colorMeshVerticesCmd);
+	REGISTER_COMMAND_WITH_SYNTAX(plugin, inverseMatrixCmd);
+	
 
 	return MS::kSuccess;
 }
