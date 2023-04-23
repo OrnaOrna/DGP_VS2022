@@ -100,7 +100,7 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 	MStatus stat = MS::kSuccess;
 
 	//This code is here just as an example of how to use the Matlab interface.
-	//You code for inverting a matrix should be written as part of a new Maya command with the name "inverseMatrixCmd”.
+	//You code for inverting a matrix should be written as part of a new Maya command with the name "inverseMatrixCmdï¿½.
 	//test Matlab engine
 	if (0)
 	{
