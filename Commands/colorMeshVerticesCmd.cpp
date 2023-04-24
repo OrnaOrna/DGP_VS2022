@@ -101,7 +101,6 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 
 	MSyntax commandSyntax = syntax();
 
-
 	MArgDatabase argData(commandSyntax, argList, &stat);
 	MCHECKERROR(stat, "Wrong syntax for command " + commandName());
 

@@ -13,6 +13,7 @@
 
 #include "Commands/colorMeshVerticesCmd.h"
 #include "Commands/inverseMatrixCmd.h"
+#include "Commands/topologyStatisticsCmd.h"
 
 MStatus initializePlugin(MObject obj)
 { 
@@ -27,6 +28,7 @@ MStatus initializePlugin(MObject obj)
 	
 	REGISTER_NODE(plugin, MPxNode::kDeformerNode, SpaceDeformer2D, NULL);
 	REGISTER_COMMAND_WITH_SYNTAX(plugin, TriangulatePolygonCmd);
+	REGISTER_COMMAND_WITH_SYNTAX(plugin, topologyStatisticsCmd);
 	REGISTER_COMMAND_WITH_SYNTAX(plugin, colorMeshVerticesCmd);
 	REGISTER_COMMAND_WITH_SYNTAX(plugin, inverseMatrixCmd);
 	
@@ -43,6 +45,8 @@ MStatus uninitializePlugin(MObject obj)
 	DEREGISTER_NODE(plugin, SpaceDeformer2D);
 	DEREGISTER_COMMAND(plugin, TriangulatePolygonCmd);
 	DEREGISTER_COMMAND(plugin, colorMeshVerticesCmd);
+	DEREGISTER_COMMAND(plugin, topologyStatisticsCmd);
+	DEREGISTER_COMMAND(plugin, inverseMatrixCmd);
 
 	return MS::kSuccess;
 }

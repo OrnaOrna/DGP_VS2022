@@ -1,9 +1,6 @@
 ﻿#include "inverseMatrixCmd.h"
 
 #include "stdafx.h"
-#include "Utils/STL_Macros.h"
-#include "Utils/Maya_Macros.h"
-#include <Utils/Maya_Utils.h>
 #include "Utils/MatlabInterface.h"
 #include "Utils/MatlabGMMDataExchange.h"
 
@@ -30,7 +27,7 @@ MSyntax inverseMatrixCmd::syntax() {
 
 MString inverseMatrixCmd::commandName() {
     return "inverseMatrixCmd";
-};
+}
 
 bool inverseMatrixCmd::isUndoable() const
 {
