@@ -17,6 +17,17 @@ void* inverseMatrixCmd::creator()
     return new inverseMatrixCmd();
 }
 
+MSyntax inverseMatrixCmd::syntax() {
+    MSyntax commandSyntax;
+
+	for (int i = 0; i < 9; ++i) {
+	    commandSyntax.addArg(MSyntax::kDouble);
+    }
+
+    return commandSyntax;
+}
+
+
 MString inverseMatrixCmd::commandName() {
     return "inverseMatrixCmd";
 };
@@ -29,9 +40,6 @@ bool inverseMatrixCmd::isUndoable() const
 MStatus inverseMatrixCmd::doIt(const MArgList& argList)
 {
 	MSyntax commandSyntax = syntax();
-    for (int i = 0; i < 9; ++i) {
-	    commandSyntax.addArg(MSyntax::kDouble);
-    }
 
 	GMMDenseColMatrix M(3, 3);
     for (int i = 0; i < 9; ++i)
@@ -40,13 +48,21 @@ MStatus inverseMatrixCmd::doIt(const MArgList& argList)
     }
 
     int result = MatlabGMMDataExchange::SetEngineDenseMatrix("M", M);
-    MatlabInterface::GetEngine().EvalToCout("Q = inv(M)");
+    MatlabInterface::GetEngine().Eval("Q = inv(M)");
 
-    
+    // First check if the matrix is invertible
+    MatlabInterface::GetEngine().Eval("d = [det(M)]");
+    GMMDenseColMatrix d;
+	result = MatlabGMMDataExchange::GetEngineDenseMatrix("d", d);
+
+    if (d(0, 0) == 0.0) {
+	    cerr << "Error: Matrix isn't invertible" << endl;
+        return MS::kSuccess;
+    }
 
     GMMDenseColMatrix Q;
     result = MatlabGMMDataExchange::GetEngineDenseMatrix("Q", Q);
-    cout << "printing the GMM Matrix: " <<  Q << endl;
+    cout << "The inverse matrix is: " <<  Q << endl;
 
     return MS::kSuccess;
 }

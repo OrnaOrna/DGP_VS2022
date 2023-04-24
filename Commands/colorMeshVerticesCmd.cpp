@@ -100,8 +100,7 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 
 
 	MSyntax commandSyntax = syntax();
-	commandSyntax.addFlag(MINARG, MINARG, MSyntax::kDouble);
-	commandSyntax.addFlag(MAXARG, MAXARG, MSyntax::kDouble);
+
 
 	MArgDatabase argData(commandSyntax, argList, &stat);
 	MCHECKERROR(stat, "Wrong syntax for command " + commandName());
@@ -233,9 +232,13 @@ MSyntax colorMeshVerticesCmd::syntax()
 	MSyntax commandSyntax;
 
 	// Hint - you need to use here the addFlag method of MSyntax class
+	commandSyntax.addFlag(MINARG, MINARG, MSyntax::kDouble);
+	commandSyntax.addFlag(MAXARG, MAXARG, MSyntax::kDouble);
+
 
 	stat = commandSyntax.setObjectType(MSyntax::kSelectionList, 1, 1); //expect exactly one object
 	MCHECKERRORNORET(stat, "Can't create Syntax object for this command");
 
 	commandSyntax.useSelectionAsDefault(true);
-	return commandSyntax;}
+	return commandSyntax;
+}
