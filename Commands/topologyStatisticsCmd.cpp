@@ -11,33 +11,41 @@ int connectedComponents(const MFnMesh &meshFn,
 	// edges.
 
 	std::queue<int> edgeQueue;
-	int components = 0, currIndex, prevIndex;
+	std::map<int, bool> visitedEdges;
+
+	int components = 0, currIndex, prevIndex, unvisited = 0;
 	MIntArray connectedEdges;
 
 	MItMeshEdge edge_it = meshFn.object();
 
-	MIntArray edgeList;
+
 	while (!edge_it.isDone())
 	{
 		currIndex = edge_it.index();
 		if (!onlyBoundaries || edge_it.onBoundary()) {
-			edgeList.append(currIndex);
+			++unvisited;
+			visitedEdges[currIndex] = false;
 		}
 		edge_it.next();
 	}
 
+
 	edge_it.reset();
 
-	std::map<int, bool> visitedEdges;
-	for (int edge : edgeList) {
-		visitedEdges[edge] =  false;
-	}
-
-	while (edgeList.length() > 0) {
+	while (unvisited > 0) {
 		++components;
-		edgeQueue.push(edgeList[0]);
-		edgeList.remove(edgeList[0]);
-		visitedEdges[edgeList[0]] = true;
+
+		int firstEdge;
+		for (const std::pair<const int, bool>& visited_edge : visitedEdges) {
+			if (visited_edge.second == false){
+				firstEdge = visited_edge.first;
+			 	break;
+			}
+		}
+
+		edgeQueue.push(firstEdge);
+		visitedEdges[firstEdge] = true;
+		--unvisited;
 
 		while(!edgeQueue.empty()) {
 			currIndex = edgeQueue.front();
@@ -50,8 +58,8 @@ int connectedComponents(const MFnMesh &meshFn,
 				edge_it.setIndex(edge, prevIndex);
 				if ((!onlyBoundaries || edge_it.onBoundary()) && visitedEdges[edge] == false) {
 					visitedEdges[edge] = true;
-					edgeList.remove(edge);
 					edgeQueue.push(edge);
+					--unvisited;
 				}
 			}
 		}
@@ -104,8 +112,6 @@ MStatus topologyStatisticsCmd::doIt(const MArgList& argList) {
 	MCHECKERROR(stat, "Can't access mesh");
 
 
-
-
 	MString message = "";
 	message += "Mesh name: " + meshFn.name() + "\n";
 
@@ -128,14 +134,14 @@ MStatus topologyStatisticsCmd::doIt(const MArgList& argList) {
 	message += "Number of edges: " +
 		MString(std::to_string(meshFn.numEdges()).c_str()) + "\n";
 
-	int components = connectedComponents(meshFn, false);
-	int boundaries = connectedComponents(meshFn, true);
+	const int components = connectedComponents(meshFn, false);
+	const int boundaries = connectedComponents(meshFn, true);
 	message += "Number of connected components: " + 
 		MString(std::to_string(components).c_str()) + "\n";;
 	message += "Number of boundaries: " + 
 		MString(std::to_string(boundaries).c_str()) + "\n";
 
-	int eulerCharacteristic = meshFn.numVertices() + meshFn.numPolygons()
+	const int eulerCharacteristic = meshFn.numVertices() + meshFn.numPolygons()
 							- meshFn.numEdges();
 	message += "Euler characteristic: " + 
 				MString(std::to_string(eulerCharacteristic).c_str()) + "\n";
