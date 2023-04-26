@@ -3,7 +3,7 @@
 #include "Utils/Utilities.h"
 
 #include "colorMeshVerticesCmd.h"
-
+#include "curvature.h"
 #include "Utils/STL_Macros.h"
 #include "Utils/Maya_Macros.h"
 #include "Utils/Maya_Utils.h"
@@ -60,47 +60,6 @@ void colorVertexByValence(const unsigned int valence, float* vertexColor)
 	}
 	default:
 		break;
-	}
-}
-
-double getAngleBetweenVertices(const MPoint& left, const MPoint& center, const MPoint& right) {
-	const MVector u = center - left;
-	const MVector v = center - right;
-
-	const double cosine = u * v / (u.length() * v.length());
-	return acos(cosine);
-}
-
-void getGaussianCurvature(const MFnMesh& meshFn, std::map<int, double>& curvature)
-{
-	MItMeshVertex vertex_it = meshFn.object();
-	MItMeshPolygon face_it = meshFn.object();
-	//std::map<int, double> curvature;
-	while(!vertex_it.isDone())
-	{
-		if(vertex_it.onBoundary())
-		{
-			curvature[vertex_it.index()] = M_PI;
-		}
-		else
-		{
-			curvature[vertex_it.index()] = 2 * M_PI;
-		}
-		vertex_it.next();
-	}
-
-	MIntArray vertices;
-	MPoint left, center, right;
-	while(!face_it.isDone())
-	{
-		face_it.getVertices(vertices);
-		meshFn.getPoint(vertices[0], left);
-		meshFn.getPoint(vertices[1], center);
-		meshFn.getPoint(vertices[2], right);
-		curvature[vertices[1]] -= getAngleBetweenVertices(left, center, right);
-		curvature[vertices[2]] -= getAngleBetweenVertices(center, right, left);
-		curvature[vertices[0]] -= getAngleBetweenVertices(right, left, center);
-		face_it.next();
 	}
 }
 
