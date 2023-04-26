@@ -136,13 +136,16 @@ MStatus topologyStatisticsCmd::doIt(const MArgList& argList) {
 
 	const int components = connectedComponents(meshFn, false);
 	const int boundaries = connectedComponents(meshFn, true);
+	// x=V+F-E=2(C-g)+b
+	const int eulerCharacteristic = meshFn.numVertices() + meshFn.numPolygons()
+		- meshFn.numEdges();
+	//g=C-((x-b)/2)
+	const int genus = components - (eulerCharacteristic - boundaries) / 2;
+	message += "Genus:" + MString(std::to_string(genus).c_str()) + "\n";
 	message += "Number of connected components: " + 
-		MString(std::to_string(components).c_str()) + "\n";;
+		MString(std::to_string(components).c_str()) + "\n";
 	message += "Number of boundaries: " + 
 		MString(std::to_string(boundaries).c_str()) + "\n";
-
-	const int eulerCharacteristic = meshFn.numVertices() + meshFn.numPolygons()
-							- meshFn.numEdges();
 	message += "Euler characteristic: " + 
 				MString(std::to_string(eulerCharacteristic).c_str()) + "\n";
 

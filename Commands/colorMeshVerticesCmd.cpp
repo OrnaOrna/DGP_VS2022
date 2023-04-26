@@ -71,7 +71,36 @@ double getAngleBetweenVertices(const MPoint& left, const MPoint& center, const M
 	return acos(cosine);
 }
 
-
+std::map<int, double> getGaussianCurvature(const MFnMesh& meshFn)
+{
+	MItMeshVertex vertex_it = meshFn.object();
+	MItMeshPolygon face_it = meshFn.object();
+	std::map<int, double> curvature;
+	while(!vertex_it.isDone())
+	{
+		if(vertex_it.onBoundary())
+		{
+			curvature[vertex_it.index()] = M_PI;
+		}
+		else
+		{
+			curvature[vertex_it.index()] = 2 * M_PI;
+		}
+	}
+	MIntArray vertices;
+	MPoint left, center, right;
+	while(!face_it.isDone())
+	{
+		face_it.getVertices(vertices);
+		meshFn.getPoint(vertices[0], left);
+		meshFn.getPoint(vertices[1], center);
+		meshFn.getPoint(vertices[2], right);
+		curvature[vertices[1]] -= getAngleBetweenVertices(left, center, right);
+		curvature[vertices[2]] -= getAngleBetweenVertices(center, right, left);
+		curvature[vertices[0]] -= getAngleBetweenVertices(right, left, center);
+	}
+	return curvature;
+}
 
 colorMeshVerticesCmd::colorMeshVerticesCmd()
 {
@@ -170,52 +199,37 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 	meshFn.setVertexColors(valenceColors, valenceVertexList);
 	meshFn.setDisplayColors(true);
 
+	std::map <int, double> curvatures = getGaussianCurvature(meshFn);
+	double minCurvature = INFINITY, maxCurvature = -INFINITY;
+	for (const auto& curvature : curvatures)
+	{
+		if (curvature.second < minCurvature)
+		{
+			minCurvature = curvature.second;
+		}
+		if (curvature.second > maxCurvature)
+		{
+			maxCurvature = curvature.second;
+		}
+	}
+
 	// Get values of min, max flags
-	double minCurvature = -M_PI, maxCurvate = M_PI;
 	if (argData.isFlagSet(MINARG)) {
 		minCurvature = argData.flagArgumentDouble(MINARG, 1);
 	}
 	if (argData.isFlagSet(MAXARG)) {
-		maxCurvate = argData.flagArgumentDouble(MAXARG, 1);
+		maxCurvature = argData.flagArgumentDouble(MAXARG, 1);
 	}
 
-
-	vertex_it = meshFn.object();
-	while (!vertex_it.isDone())
+	for (const auto& curvature : curvatures)
 	{
-		int curIndex = vertex_it.index();
-
-		double curvature = 0;
-
-		// Calculate Gaussian curvature from non-closed neighboring points
-		MPoint pos = vertex_it.position();
-		MIntArray connectedVertices;
-		vertex_it.getConnectedVertices(connectedVertices);
-		for (unsigned i = 0; i < connectedVertices.length() - 1; ++i) {
-			MPoint left, right;
-			meshFn.getPoint(connectedVertices[i], left);
-			meshFn.getPoint(connectedVertices[i + 1], right);
-			curvature -= getAngleBetweenVertices(left, pos, right);
-		}
-
-		if (vertex_it.onBoundary()) {
-			curvature += M_PI;
-		} else {
-			curvature += 2*M_PI;
-			MPoint left, right;
-			meshFn.getPoint(connectedVertices[connectedVertices.length() - 1], left);
-			meshFn.getPoint(connectedVertices[0], right);
-			curvature -= getAngleBetweenVertices(left, pos, right);
-		}
-
-
-		float R, G, B;
-		mapColor(curvature, R, G, B, minCurvature, maxCurvate);
-		curvatureColors.append(R, G, B);
-
-		curvatureVertexList.append(curIndex);
-		vertex_it.next();
+		curvatureVertexList.append(curvature.first);
+		float r, g, b;
+		mapColor(curvature.second, r, g, b, minCurvature, maxCurvature);
+		curvatureColors.append(r, g, b);
 	}
+
+
 
 	meshFn.setVertexColors(curvatureColors, curvatureVertexList);
 	meshFn.setDisplayColors(true);
