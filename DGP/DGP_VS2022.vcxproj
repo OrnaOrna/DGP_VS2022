@@ -31,6 +31,7 @@
     <ClInclude Include="..\Commands\inverseMatrixCmd.h" />
     <ClInclude Include="..\Commands\topologyStatisticsCmd.h" />
     <ClInclude Include="..\Commands\TriangulatePolygonCmd.h" />
+    <ClInclude Include="..\curvature.h" />
     <ClInclude Include="..\Nodes\SpaceDeformer2D.h" />
     <ClInclude Include="..\stdafx.h" />
     <ClInclude Include="..\Utils\GMM_Macros.h" />

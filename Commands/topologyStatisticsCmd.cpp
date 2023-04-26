@@ -2,7 +2,11 @@
 #include "stdafx.h"
 #include "Utils/Maya_Macros.h"
 #include <Utils/Maya_Utils.h>
+#include "curvature.h"
 #include <queue>
+
+
+
 
 int connectedComponents(const MFnMesh &meshFn,
 						bool onlyBoundaries) {
@@ -149,7 +153,16 @@ MStatus topologyStatisticsCmd::doIt(const MArgList& argList) {
 	message += "Euler characteristic: " + 
 				MString(std::to_string(eulerCharacteristic).c_str()) + "\n";
 
-	message += "Euler characteristic based on discrete Gauss-Bonnet: 1\n";
+	std::map <int, double> curvatures;
+	getGaussianCurvature(meshFn, curvatures);
+	double totalCurvature = 0;
+	for (const auto& curvature : curvatures)
+	{
+		totalCurvature += curvature.second;
+	}
+	
+	message += "Euler characteristic based on discrete Gauss-Bonnet: " +
+		MString(std::to_string(totalCurvature / (2 * M_PI)).c_str()) + "\n";
 
 	MGlobal::displayInfo(message);
 
