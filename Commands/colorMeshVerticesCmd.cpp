@@ -75,7 +75,6 @@ void getGaussianCurvature(const MFnMesh& meshFn, std::map<int, double>& curvatur
 {
 	MItMeshVertex vertex_it = meshFn.object();
 	MItMeshPolygon face_it = meshFn.object();
-	//std::map<int, double> curvature;
 	while(!vertex_it.isDone())
 	{
 		if(vertex_it.onBoundary())
@@ -215,13 +214,6 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 			maxCurvature = curvature.second;
 		}
 	}
-	MString message = "The min curvature is:";
-	message += MString(std::to_string(minCurvature).c_str()) + "\n";
-	message += "and the max curvature is:";
-	message += MString(std::to_string(maxCurvature).c_str()) + "\n";
-	MGlobal::displayInfo(message);
-
-	MGlobal::displayInfo(message);
 	// Get values of min, max flags
 	if (argData.isFlagSet(MINARG)) {
 		minCurvature = argData.flagArgumentDouble(MINARG, 1);
@@ -229,6 +221,7 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 	if (argData.isFlagSet(MAXARG)) {
 		maxCurvature = argData.flagArgumentDouble(MAXARG, 1);
 	}
+
 
 	for (const auto& curvature : curvatures)
 	{
