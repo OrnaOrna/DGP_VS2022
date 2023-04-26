@@ -71,11 +71,11 @@ double getAngleBetweenVertices(const MPoint& left, const MPoint& center, const M
 	return acos(cosine);
 }
 
-std::map<int, double> getGaussianCurvature(const MFnMesh& meshFn)
+void getGaussianCurvature(const MFnMesh& meshFn, std::map<int, double>& curvature)
 {
 	MItMeshVertex vertex_it = meshFn.object();
 	MItMeshPolygon face_it = meshFn.object();
-	std::map<int, double> curvature;
+	//std::map<int, double> curvature;
 	while(!vertex_it.isDone())
 	{
 		if(vertex_it.onBoundary())
@@ -86,7 +86,9 @@ std::map<int, double> getGaussianCurvature(const MFnMesh& meshFn)
 		{
 			curvature[vertex_it.index()] = 2 * M_PI;
 		}
+		vertex_it.next();
 	}
+
 	MIntArray vertices;
 	MPoint left, center, right;
 	while(!face_it.isDone())
@@ -98,8 +100,8 @@ std::map<int, double> getGaussianCurvature(const MFnMesh& meshFn)
 		curvature[vertices[1]] -= getAngleBetweenVertices(left, center, right);
 		curvature[vertices[2]] -= getAngleBetweenVertices(center, right, left);
 		curvature[vertices[0]] -= getAngleBetweenVertices(right, left, center);
+		face_it.next();
 	}
-	return curvature;
 }
 
 colorMeshVerticesCmd::colorMeshVerticesCmd()
@@ -199,7 +201,8 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 	meshFn.setVertexColors(valenceColors, valenceVertexList);
 	meshFn.setDisplayColors(true);
 
-	std::map <int, double> curvatures = getGaussianCurvature(meshFn);
+	std::map <int, double> curvatures;
+	getGaussianCurvature(meshFn, curvatures);
 	double minCurvature = INFINITY, maxCurvature = -INFINITY;
 	for (const auto& curvature : curvatures)
 	{
@@ -212,7 +215,13 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 			maxCurvature = curvature.second;
 		}
 	}
+	MString message = "The min curvature is:";
+	message += MString(std::to_string(minCurvature).c_str()) + "\n";
+	message += "and the max curvature is:";
+	message += MString(std::to_string(maxCurvature).c_str()) + "\n";
+	MGlobal::displayInfo(message);
 
+	MGlobal::displayInfo(message);
 	// Get values of min, max flags
 	if (argData.isFlagSet(MINARG)) {
 		minCurvature = argData.flagArgumentDouble(MINARG, 1);
