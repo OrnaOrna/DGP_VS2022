@@ -224,10 +224,10 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 	MGlobal::displayInfo(message);
 	// Get values of min, max flags
 	if (argData.isFlagSet(MINARG)) {
-		minCurvature = argData.flagArgumentDouble(MINARG, 1);
+		minCurvature = argData.flagArgumentDouble(MINARG, 0);
 	}
 	if (argData.isFlagSet(MAXARG)) {
-		maxCurvature = argData.flagArgumentDouble(MAXARG, 1);
+		maxCurvature = argData.flagArgumentDouble(MAXARG, 0);
 	}
 
 	for (const auto& curvature : curvatures)
