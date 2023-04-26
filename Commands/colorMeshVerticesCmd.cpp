@@ -127,8 +127,6 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 {
 	MStatus stat = MS::kSuccess;
 
-
-
 	MSyntax commandSyntax = syntax();
 
 	MArgDatabase argData(commandSyntax, argList, &stat);
@@ -216,10 +214,10 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 	}
 	// Get values of min, max flags
 	if (argData.isFlagSet(MINARG)) {
-		minCurvature = argData.flagArgumentDouble(MINARG, 1);
+		argData.getFlagArgument(MINARG, 0, minCurvature);
 	}
 	if (argData.isFlagSet(MAXARG)) {
-		maxCurvature = argData.flagArgumentDouble(MAXARG, 1);
+		argData.getFlagArgument(MAXARG, 0, maxCurvature);
 	}
 
 
@@ -247,8 +245,8 @@ MSyntax colorMeshVerticesCmd::syntax()
 	MSyntax commandSyntax;
 
 	// Hint - you need to use here the addFlag method of MSyntax class
-	commandSyntax.addFlag(MINARG, MINARG, MSyntax::kDouble);
-	commandSyntax.addFlag(MAXARG, MAXARG, MSyntax::kDouble);
+	commandSyntax.addFlag(MINARG, "minimum", MSyntax::kDouble);
+	commandSyntax.addFlag(MAXARG, "maximum", MSyntax::kDouble);
 
 
 	stat = commandSyntax.setObjectType(MSyntax::kSelectionList, 1, 1); //expect exactly one object
