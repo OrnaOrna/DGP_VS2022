@@ -5,11 +5,11 @@
 #include "curvature.h"
 #include <queue>
 
-
+#include "curvature.h"
 
 
 int connectedComponents(const MFnMesh &meshFn,
-						bool onlyBoundaries) {
+                        bool onlyBoundaries) {
 	// Note that an edge is a boundary edge iff all vertices it is connected to
 	// are boundary vertices, but a boundary vertex may be connected to non-boundary
 	// edges.

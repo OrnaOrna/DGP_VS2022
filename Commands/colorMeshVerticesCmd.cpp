@@ -136,6 +136,8 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 	MString s1 = meshFn.createColorSetWithName("ValenceColorSet");
 	MString s2 = meshFn.createColorSetWithName("CurvatureColorSet");
 
+	meshFn.setCurrentUVSetName(s1);
+
 	MItMeshVertex vertex_it(meshFn.object());
 	MIntArray valenceVertexList, curvatureVertexList;
 	MColorArray valenceColors, curvatureColors;
@@ -158,6 +160,8 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 	meshFn.setVertexColors(valenceColors, valenceVertexList);
 	meshFn.setDisplayColors(true);
 
+	meshFn.setCurrentColorSetName(s2);
+
 	std::map <int, double> curvatures;
 	getGaussianCurvature(meshFn, curvatures);
 	double minCurvature = INFINITY, maxCurvature = -INFINITY;
@@ -179,6 +183,14 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 	if (argData.isFlagSet(MAXARG)) {
 		argData.getFlagArgument(MAXARG, 0, maxCurvature);
 	}
+
+	MString message;
+	message = "min curvature: " +
+				MString(std::to_string(minCurvature).c_str()) + "\n" +
+		      "max curvature: " + 
+		      	MString(std::to_string(maxCurvature).c_str()) + "\n";
+	MGlobal::displayInfo(message);
+;
 
 
 	for (const auto& curvature : curvatures)

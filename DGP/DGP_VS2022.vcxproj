@@ -15,6 +15,7 @@
     <ClCompile Include="..\Commands\inverseMatrixCmd.cpp" />
     <ClCompile Include="..\Commands\topologyStatisticsCmd.cpp" />
     <ClCompile Include="..\Commands\TriangulatePolygonCmd.cpp" />
+    <ClCompile Include="..\curvature.cpp" />
     <ClCompile Include="..\Nodes\SpaceDeformer2D.cpp" />
     <ClCompile Include="..\stdafx.cpp" />
     <ClCompile Include="..\Utils\Limit_Util.cpp" />
