@@ -163,7 +163,7 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 
 	std::map <int, double> curvatures;
 	getGaussianCurvature(meshFn, curvatures);
-	double minCurvature = INFINITY, maxCurvature = INFINITY;
+	double minCurvature = INFINITY, maxCurvature = -INFINITY;
 	for (const auto& curvature : curvatures)
 	{
 		if (curvature.second < minCurvature)
