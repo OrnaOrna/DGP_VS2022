@@ -4,7 +4,6 @@
 #include <Utils/Maya_Utils.h>
 #include "curvature.h"
 #include <queue>
-
 #include "curvature.h"
 
 
@@ -140,12 +139,12 @@ MStatus topologyStatisticsCmd::doIt(const MArgList& argList) {
 
 	const int components = connectedComponents(meshFn, false);
 	const int boundaries = connectedComponents(meshFn, true);
-	// x=V+F-E=2(C-g)+b
+	// x=V+F-E=2(C-g)-b
 	const int eulerCharacteristic = meshFn.numVertices() + meshFn.numPolygons()
 		- meshFn.numEdges();
-	//g=C-((x-b)/2)
-	const int genus = components - (eulerCharacteristic - boundaries) / 2;
-	message += "Genus:" + MString(std::to_string(genus).c_str()) + "\n";
+	//g=C-((x+b)/2)
+	const int genus = components - (eulerCharacteristic + boundaries) / 2;
+	message += "Genus: " + MString(std::to_string(genus).c_str()) + "\n";
 	message += "Number of connected components: " + 
 		MString(std::to_string(components).c_str()) + "\n";
 	message += "Number of boundaries: " + 
@@ -161,8 +160,16 @@ MStatus topologyStatisticsCmd::doIt(const MArgList& argList) {
 		totalCurvature += curvature.second;
 	}
 	
-	message += "Euler characteristic based on discrete Gauss-Bonnet: " +
-		MString(std::to_string(totalCurvature / (2 * M_PI)).c_str()) + "\n";
+	message += "Euler characteristic based on discrete Gauss-Bonnet: ";
+	MString curvatureString;
+	curvatureString.set((totalCurvature) / (2 * M_PI), 10);
+	message += curvatureString + "\n";
+
+	if (!isTriangular)
+	{
+		message += "Note that the mesh isn't triangular, so due to technical"
+			 " constraints the value will be off \n";
+	}
 
 	MGlobal::displayInfo(message);
 

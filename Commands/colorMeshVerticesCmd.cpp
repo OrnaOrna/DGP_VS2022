@@ -128,7 +128,6 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 	
 	/***************** this part should be changed ****************/
 	// Delete the color sets if they exist
-	meshFn.deleteColorSet("ExampleColorSet");
 	meshFn.deleteColorSet("ValenceColorSet");
 	meshFn.deleteColorSet("CurvatureColorSet");
 
@@ -136,7 +135,7 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 	MString s1 = meshFn.createColorSetWithName("ValenceColorSet");
 	MString s2 = meshFn.createColorSetWithName("CurvatureColorSet");
 
-	meshFn.setCurrentUVSetName(s1);
+	meshFn.setCurrentColorSetName(s1);
 
 	MItMeshVertex vertex_it(meshFn.object());
 	MIntArray valenceVertexList, curvatureVertexList;
@@ -164,7 +163,7 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 
 	std::map <int, double> curvatures;
 	getGaussianCurvature(meshFn, curvatures);
-	double minCurvature = INFINITY, maxCurvature = -INFINITY;
+	double minCurvature = INFINITY, maxCurvature = INFINITY;
 	for (const auto& curvature : curvatures)
 	{
 		if (curvature.second < minCurvature)

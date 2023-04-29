@@ -39,7 +39,6 @@ void getGaussianCurvature(const MFnMesh& meshFn, std::map<int, double>& curvatur
 		}
 		for (int i = 0; i < numVertices; ++i)
 		{
-			cout << i << "," << numVertices << "," << points.length() << endl;
 			curvature[vertices[i]] -= getAngleBetweenVertices(
 				points[(i + numVertices - 1) % numVertices],
 				points[i], points[(i + 1) % numVertices]);
