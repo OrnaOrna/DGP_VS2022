@@ -5,8 +5,7 @@ double getAngleBetweenVertices(const MPoint& left, const MPoint& center, const M
 	const MVector u = center - left;
 	const MVector v = center - right;
 
-	const double cosine = u * v / (u.length() * v.length());
-	return acos(cosine);
+	return u.angle(v);
 }
 
 void getGaussianCurvature(const MFnMesh& meshFn, std::map<int, double>& curvature)
