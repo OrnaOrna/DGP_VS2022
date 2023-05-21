@@ -24,6 +24,7 @@
     <ClCompile Include="..\Utils\triangle.c" />
     <ClCompile Include="..\Utils\triangulation.cpp" />
     <ClCompile Include="..\Utils\Utilities.cpp" />
+    <ClCompile Include="harmonicFlatteningCmd.cpp" />
     <ClCompile Include="pluginMain.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -45,6 +46,7 @@
     <ClInclude Include="..\Utils\triangle.h" />
     <ClInclude Include="..\Utils\triangulation.h" />
     <ClInclude Include="..\Utils\Utilities.h" />
+    <ClInclude Include="harmonicFlatteningCmd.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\MEL\DGP.mel">
