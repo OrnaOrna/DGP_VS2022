@@ -3,7 +3,7 @@
 #include "Utils/Utilities.h"
 
 #include "colorMeshVerticesCmd.h"
-#include "curvature.h"
+#include "..\helpers.h"
 #include "Utils/STL_Macros.h"
 #include "Utils/Maya_Macros.h"
 #include "Utils/Maya_Utils.h"
@@ -107,7 +107,6 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 	MFnMesh meshFn(meshObject, &stat);
 	MCHECKERROR(stat, "Can't access mesh");
 
-	int numVerticesInMeshCreated = 0;
 	int numPolygons = meshFn.numPolygons(&stat);
 
 	MItMeshPolygon poly(meshObject);

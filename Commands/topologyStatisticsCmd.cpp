@@ -2,75 +2,7 @@
 #include "stdafx.h"
 #include "Utils/Maya_Macros.h"
 #include <Utils/Maya_Utils.h>
-#include "curvature.h"
-#include <queue>
-#include "curvature.h"
-
-
-int connectedComponents(const MFnMesh &meshFn,
-                        bool onlyBoundaries) {
-	// Note that an edge is a boundary edge iff all vertices it is connected to
-	// are boundary vertices, but a boundary vertex may be connected to non-boundary
-	// edges.
-
-	std::queue<int> edgeQueue;
-	std::map<int, bool> visitedEdges;
-
-	int components = 0, currIndex, prevIndex, unvisited = 0;
-	MIntArray connectedEdges;
-
-	MItMeshEdge edge_it = meshFn.object();
-
-
-	while (!edge_it.isDone())
-	{
-		currIndex = edge_it.index();
-		if (!onlyBoundaries || edge_it.onBoundary()) {
-			++unvisited;
-			visitedEdges[currIndex] = false;
-		}
-		edge_it.next();
-	}
-
-
-	edge_it.reset();
-
-	while (unvisited > 0) {
-		++components;
-
-		int firstEdge;
-		for (const std::pair<const int, bool>& visited_edge : visitedEdges) {
-			if (visited_edge.second == false){
-				firstEdge = visited_edge.first;
-			 	break;
-			}
-		}
-
-		edgeQueue.push(firstEdge);
-		visitedEdges[firstEdge] = true;
-		--unvisited;
-
-		while(!edgeQueue.empty()) {
-			currIndex = edgeQueue.front();
-			edgeQueue.pop();
-
-			edge_it.setIndex(currIndex, prevIndex);
-			edge_it.getConnectedEdges(connectedEdges);
-
-			for (int edge : connectedEdges) {
-				edge_it.setIndex(edge, prevIndex);
-				if ((!onlyBoundaries || edge_it.onBoundary()) && visitedEdges[edge] == false) {
-					visitedEdges[edge] = true;
-					edgeQueue.push(edge);
-					--unvisited;
-				}
-			}
-		}
-	}
-
-	return components;
-}
-
+#include "..\helpers.h"
 
 topologyStatisticsCmd::topologyStatisticsCmd() {
 	

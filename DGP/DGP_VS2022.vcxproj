@@ -12,10 +12,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Commands\colorMeshVerticesCmd.cpp" />
+    <ClCompile Include="..\Commands\harmonicFlatteningCmd.cpp" />
     <ClCompile Include="..\Commands\inverseMatrixCmd.cpp" />
     <ClCompile Include="..\Commands\topologyStatisticsCmd.cpp" />
     <ClCompile Include="..\Commands\TriangulatePolygonCmd.cpp" />
-    <ClCompile Include="..\curvature.cpp" />
+    <ClCompile Include="..\helpers.cpp" />
     <ClCompile Include="..\Nodes\SpaceDeformer2D.cpp" />
     <ClCompile Include="..\stdafx.cpp" />
     <ClCompile Include="..\Utils\Limit_Util.cpp" />
@@ -25,15 +26,15 @@
     <ClCompile Include="..\Utils\triangle.c" />
     <ClCompile Include="..\Utils\triangulation.cpp" />
     <ClCompile Include="..\Utils\Utilities.cpp" />
-    <ClCompile Include="harmonicFlatteningCmd.cpp" />
     <ClCompile Include="pluginMain.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Commands\colorMeshVerticesCmd.h" />
+    <ClInclude Include="..\Commands\harmonicFlatteningCmd.h" />
     <ClInclude Include="..\Commands\inverseMatrixCmd.h" />
     <ClInclude Include="..\Commands\topologyStatisticsCmd.h" />
     <ClInclude Include="..\Commands\TriangulatePolygonCmd.h" />
-    <ClInclude Include="..\curvature.h" />
+    <ClInclude Include="..\helpers.h" />
     <ClInclude Include="..\Nodes\SpaceDeformer2D.h" />
     <ClInclude Include="..\stdafx.h" />
     <ClInclude Include="..\Utils\GMM_Macros.h" />
@@ -47,7 +48,6 @@
     <ClInclude Include="..\Utils\triangle.h" />
     <ClInclude Include="..\Utils\triangulation.h" />
     <ClInclude Include="..\Utils\Utilities.h" />
-    <ClInclude Include="harmonicFlatteningCmd.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\MEL\DGP.mel">

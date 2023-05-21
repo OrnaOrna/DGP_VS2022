@@ -4,9 +4,9 @@
 class harmonicFlatteningCmd : public MPxCommand {
 public:
     harmonicFlatteningCmd();
-    virtual MStatus doIt(const MArgList& argList);
+    MStatus doIt(const MArgList& argList) override;
     static void* creator();
     static MSyntax syntax();
     static MString commandName();
-    virtual bool isUndoable() const;
+    bool isUndoable() const override;
 };
