@@ -87,8 +87,6 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 {
 	MStatus stat = MS::kSuccess;
 
-
-
 	MSyntax commandSyntax = syntax();
 
 	MArgDatabase argData(commandSyntax, argList, &stat);
@@ -130,13 +128,14 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 	
 	/***************** this part should be changed ****************/
 	// Delete the color sets if they exist
-	meshFn.deleteColorSet("ExampleColorSet");
 	meshFn.deleteColorSet("ValenceColorSet");
 	meshFn.deleteColorSet("CurvatureColorSet");
 
 
 	MString s1 = meshFn.createColorSetWithName("ValenceColorSet");
 	MString s2 = meshFn.createColorSetWithName("CurvatureColorSet");
+
+	meshFn.setCurrentColorSetName(s1);
 
 	MItMeshVertex vertex_it(meshFn.object());
 	MIntArray valenceVertexList, curvatureVertexList;
@@ -160,6 +159,8 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 	meshFn.setVertexColors(valenceColors, valenceVertexList);
 	meshFn.setDisplayColors(true);
 
+	meshFn.setCurrentColorSetName(s2);
+
 	std::map <int, double> curvatures;
 	getGaussianCurvature(meshFn, curvatures);
 	double minCurvature = INFINITY, maxCurvature = -INFINITY;
@@ -174,20 +175,22 @@ MStatus	colorMeshVerticesCmd::doIt(const MArgList& argList)
 			maxCurvature = curvature.second;
 		}
 	}
-	MString message = "The min curvature is:";
-	message += MString(std::to_string(minCurvature).c_str()) + "\n";
-	message += "and the max curvature is:";
-	message += MString(std::to_string(maxCurvature).c_str()) + "\n";
-	MGlobal::displayInfo(message);
-
-	MGlobal::displayInfo(message);
 	// Get values of min, max flags
 	if (argData.isFlagSet(MINARG)) {
-		minCurvature = argData.flagArgumentDouble(MINARG, 0);
+		argData.getFlagArgument(MINARG, 0, minCurvature);
 	}
 	if (argData.isFlagSet(MAXARG)) {
-		maxCurvature = argData.flagArgumentDouble(MAXARG, 0);
+		argData.getFlagArgument(MAXARG, 0, maxCurvature);
 	}
+
+	MString message;
+	message = "min curvature: " +
+				MString(std::to_string(minCurvature).c_str()) + "\n" +
+		      "max curvature: " + 
+		      	MString(std::to_string(maxCurvature).c_str()) + "\n";
+	MGlobal::displayInfo(message);
+;
+
 
 	for (const auto& curvature : curvatures)
 	{
@@ -213,8 +216,8 @@ MSyntax colorMeshVerticesCmd::syntax()
 	MSyntax commandSyntax;
 
 	// Hint - you need to use here the addFlag method of MSyntax class
-	commandSyntax.addFlag(MINARG, MINARG, MSyntax::kDouble);
-	commandSyntax.addFlag(MAXARG, MAXARG, MSyntax::kDouble);
+	commandSyntax.addFlag(MINARG, "minimum", MSyntax::kDouble);
+	commandSyntax.addFlag(MAXARG, "maximum", MSyntax::kDouble);
 
 
 	stat = commandSyntax.setObjectType(MSyntax::kSelectionList, 1, 1); //expect exactly one object
