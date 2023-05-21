@@ -115,7 +115,7 @@ int connectedComponents(const MFnMesh &meshFn,
 // Gets the boundary of the mesh as a linked list of vertex indices.
 // Assumes that the boundary of a mesh is isomorphic to a plane polygon, otherwise
 // it wouldn't work.
-void getBoundary(const MFnMesh& meshFn, std::list<int> &vertices) {
+void getBoundary(const MFnMesh& meshFn,	std::list<int> &vertices) {
 	vertices.clear();
 
 	int startIndex, prevIndex = 0, currIndex, _;
@@ -127,6 +127,7 @@ void getBoundary(const MFnMesh& meshFn, std::list<int> &vertices) {
 			vertices.push_back(startIndex);
 			break;
 		}
+		vertex_it.next();
 	}
 
 	do {

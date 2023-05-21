@@ -4,6 +4,7 @@
 #include "Utils/Maya_Utils.h"
 #include "Utils/GMM_Macros.h"
 #include "helpers.h"
+#include "Utils/MatlabGMMDataExchange.h"
 
 harmonicFlatteningCmd::harmonicFlatteningCmd() = default;
 
@@ -80,7 +81,68 @@ MStatus harmonicFlatteningCmd::doIt(const MArgList& argList) {
 	u.setLength(meshFn.numVertices());
 	v.setLength(meshFn.numVertices());
 
+	std::list<int> boundary;
+	getBoundary(meshFn, boundary);
 
+	// Get the differences between the coords of pairs of vertices on the boundary
+	std::list<MPoint> boundaryCoords = {};
+	MPoint coords;
+	for (int vertex : boundary) {
+		meshFn.getPoint(vertex, coords);
+		boundaryCoords.emplace_back(coords);
+	}
+	std::list<MVector> differences = {};
+	std::adjacent_difference(boundaryCoords.begin(), boundaryCoords.end(), 
+		std::back_inserter(differences));
+
+
+	// Sum the lengths of the differences to get the total boundary length
+	float totalBoundaryLength = 0;
+	auto i = differences.begin();
+	for (++i; i != differences.end(); ++i) {
+		totalBoundaryLength += (*i).length();
+	}
+
+	// Initialize iterators to go over the boundaries except the first and last
+	auto j = boundary.begin(), j_end = boundary.end();
+	auto i_end = differences.end();
+	--j_end;
+	--i_end;
+	i = differences.begin();
+
+	// Set the boundary coords, at last
+	u[*j] = 1;
+	v[*j] = 0;
+	float cumulativeBoundaryLength = 0; 
+	for (++i, ++j ; i != i_end && j != j_end; ++i, ++j) {
+		cumulativeBoundaryLength += (*i).length() / totalBoundaryLength;
+		u[*j] = cosf(2 * M_PI * cumulativeBoundaryLength);
+		v[*j] = sinf(2 * M_PI * cumulativeBoundaryLength);
+	}
+
+	int n = meshFn.numVertices(), m = boundary.size();
+	GMMSparseRowMatrix weight_matrix(n - m, n - m);
+	GMMDenseColMatrix rhs(n - m, 2);
+	int rowMap[n - m];
+
+	// Fill in the weight matrix and the rhs vector, for now with uniform weights
+	int row = 0, col = 0, currIndex, _;
+	MItMeshVertex vertex_it(meshFn.object());
+	MIntArray connectedVertices;
+	while (!vertex_it.isDone()) {
+		currIndex = vertex_it.index();
+		if (!vertex_it.onBoundary()) {
+			vertex_it.getConnectedVertices(connectedVertices);
+			for (int vertex : connectedVertices) {
+				
+			}
+		}
+		vertex_it.next();
+	}
+
+
+	MatlabGMMDataExchange::SetEngineSparseMatrix("weights", weight_matrix);
+	MatlabGMMDataExchange::GetEngineDenseMatrix("rhs", rhs);
 
 
 	// Create the UV set and set it properly
