@@ -8,4 +8,4 @@ void getGaussianCurvature(const MFnMesh& meshFn, std::map<int, double>& curvatur
 
 int connectedComponents(const MFnMesh &meshFn, bool onlyBoundaries);
 
-void getBoundary(const MFnMesh& meshFn, std::list<int> vertices);
+void getBoundary(const MFnMesh& meshFn, std::list<int> &vertices);

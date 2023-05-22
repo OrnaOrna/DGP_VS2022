@@ -5,6 +5,7 @@
 #include "Utils/GMM_Macros.h"
 #include "helpers.h"
 #include "Utils/MatlabGMMDataExchange.h"
+#include "Utils/MatlabInterface.h"
 
 harmonicFlatteningCmd::harmonicFlatteningCmd() = default;
 
@@ -123,27 +124,63 @@ MStatus harmonicFlatteningCmd::doIt(const MArgList& argList) {
 	int n = meshFn.numVertices(), m = boundary.size();
 	GMMSparseRowMatrix weight_matrix(n - m, n - m);
 	GMMDenseColMatrix rhs(n - m, 2);
-	int rowMap[n - m];
 
-	// Fill in the weight matrix and the rhs vector, for now with uniform weights
-	int row = 0, col = 0, currIndex, _;
 	MItMeshVertex vertex_it(meshFn.object());
-	MIntArray connectedVertices;
+
+	// Initialize a map between rows in the matrix and indexes in the mesh,
+	// and the other way around
+	int row = 0;
+	MIntArray rowMap(n - m);
+	std::map<int, int> indexMap;
 	while (!vertex_it.isDone()) {
-		currIndex = vertex_it.index();
 		if (!vertex_it.onBoundary()) {
-			vertex_it.getConnectedVertices(connectedVertices);
-			for (int vertex : connectedVertices) {
-				
-			}
+			rowMap[row] = vertex_it.index();
+			indexMap[vertex_it.index()] = row;
+			++row;
 		}
 		vertex_it.next();
 	}
 
+	// Fill in the weight matrix and the rhs vector, for now with uniform weights
+	int _, rowSum = 0;
+	MIntArray connectedVertices;
+	for (int currRow = 0; currRow < n - m; ++currRow) {
+		vertex_it.setIndex(rowMap[currRow], _);
+		vertex_it.getConnectedVertices(connectedVertices);
+		for (int vertex : connectedVertices) {
+			vertex_it.setIndex(vertex, _);
+			++rowSum;
 
+			if (vertex_it.onBoundary()) {
+				rhs(currRow, 0) = - u[vertex];
+				rhs(currRow, 1) = - v[vertex];
+			} else {
+				int col = indexMap[vertex];
+				weight_matrix(currRow, col) = 1;
+			}
+		}
+		weight_matrix(currRow, currRow) = -rowSum;
+	}
+
+
+	// Transfer matrices to MatLab
 	MatlabGMMDataExchange::SetEngineSparseMatrix("weights", weight_matrix);
 	MatlabGMMDataExchange::GetEngineDenseMatrix("rhs", rhs);
 
+	// Solve for the coordinates
+	MatlabInterface::GetEngine().Eval("weights = weights * -1");
+	MatlabInterface::GetEngine().Eval("rhs = rhs * -1");
+	MatlabInterface::GetEngine().Eval("coords = solve_linear_system_with_cholesky(weights, rhs)");
+
+	// Get the coords back from MatLab
+	GMMDenseColMatrix coord_matrix(n - m, 2);
+	MatlabGMMDataExchange::GetEngineDenseMatrix("coords", coord_matrix);
+
+	// Set the coords to u, v
+	for (int currRow = 0; currRow < n - m; ++currRow) {
+		u[rowMap[currRow]] = coord_matrix(currRow, 0);
+		v[rowMap[currRow]] = coord_matrix(currRow, 1);
+	}
 
 	// Create the UV set and set it properly
 	MString uvName = "HarmonicUV";
