@@ -121,7 +121,7 @@ MStatus harmonicFlatteningCmd::doIt(const MArgList& argList) {
 		v[*j] = sinf(2 * M_PI * cumulativeBoundaryLength);
 	}
 
-	int n = meshFn.numVertices(), m = boundary.size();
+	int n = meshFn.numVertices(), m = boundary.size() - 1;
 	GMMSparseRowMatrix weight_matrix(n - m, n - m);
 	GMMDenseColMatrix rhs(n - m, 2);
 
@@ -142,12 +142,13 @@ MStatus harmonicFlatteningCmd::doIt(const MArgList& argList) {
 	}
 
 	// Fill in the weight matrix and the rhs vector, for now with uniform weights
-	int _, rowSum = 0;
+	int col, _, rowSum;
 	MIntArray connectedVertices;
 	for (int currRow = 0; currRow < n - m; ++currRow) {
+		rowSum = 0;
 		vertex_it.setIndex(rowMap[currRow], _);
 		vertex_it.getConnectedVertices(connectedVertices);
-		for (int vertex : connectedVertices) {
+		for (const int vertex : connectedVertices) {
 			vertex_it.setIndex(vertex, _);
 			++rowSum;
 
@@ -155,17 +156,19 @@ MStatus harmonicFlatteningCmd::doIt(const MArgList& argList) {
 				rhs(currRow, 0) = - u[vertex];
 				rhs(currRow, 1) = - v[vertex];
 			} else {
-				int col = indexMap[vertex];
+				col = indexMap[vertex];
 				weight_matrix(currRow, col) = 1;
 			}
+			if (false);
 		}
 		weight_matrix(currRow, currRow) = -rowSum;
 	}
 
+	if (false);
 
 	// Transfer matrices to MatLab
-	MatlabGMMDataExchange::SetEngineSparseMatrix("weights", weight_matrix);
-	MatlabGMMDataExchange::GetEngineDenseMatrix("rhs", rhs);
+	int result = MatlabGMMDataExchange::SetEngineDenseMatrix("rhs", rhs);
+	result = MatlabGMMDataExchange::SetEngineSparseMatrix("weights", weight_matrix);
 
 	// Solve for the coordinates
 	MatlabInterface::GetEngine().Eval("weights = weights * -1");
@@ -177,9 +180,17 @@ MStatus harmonicFlatteningCmd::doIt(const MArgList& argList) {
 	MatlabGMMDataExchange::GetEngineDenseMatrix("coords", coord_matrix);
 
 	// Set the coords to u, v
+	int index;
 	for (int currRow = 0; currRow < n - m; ++currRow) {
-		u[rowMap[currRow]] = coord_matrix(currRow, 0);
-		v[rowMap[currRow]] = coord_matrix(currRow, 1);
+		index = rowMap[currRow];
+		double uValue = coord_matrix(currRow, 0);
+		double vValue = coord_matrix(currRow, 1);
+		u[index] = uValue;
+		v[index] = vValue;
+	}
+
+	for (int i = 0; i < n; i++) {
+		cout << u[i] << " " << v[i] << endl;
 	}
 
 	// Create the UV set and set it properly
