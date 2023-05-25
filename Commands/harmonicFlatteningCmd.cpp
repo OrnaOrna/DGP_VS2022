@@ -78,7 +78,8 @@ void uniformWeights(const MFnMesh& meshFn, MFloatArray& u, MFloatArray& v,
 
 	MItMeshVertex vertex_it(meshFn.object());
 
-	// Fill in the weight matrix and the rhs vector, for now with uniform weights
+	
+	// Fill in the weight matrix and the rhs vector with uniform weights
 	MIntArray connectedVertices;
 	for (unsigned int currRow = 0; currRow < rowCount; ++currRow) {
 		int _;
@@ -131,9 +132,72 @@ void cotangentWeights(const MFnMesh& meshFn, MFloatArray& u, MFloatArray& v,
 	GMMSparseRowMatrix weight_matrix(rowCount, rowCount);
 	GMMDenseColMatrix rhs(rowCount, 2);
 
-	MItMeshVertex vertex_it(meshFn.object());
 
-	// Initialize the matrix here, TODO
+	MItMeshVertex vertex_it(meshFn.object());
+	MItMeshEdge edge_it(meshFn.object());
+	MItMeshPolygon polygon_it(meshFn.object());
+
+	MIntArray connectedEdges, connectedFaces, polygonVertices;
+
+	// Initialize the matrix
+	for (unsigned int currRow = 0; currRow < rowCount; ++currRow) {
+		const int currVertex = rowMap[currRow];
+
+		int _;
+		double rowSum = 0;
+		vertex_it.setIndex(currVertex, _);
+		vertex_it.getConnectedEdges(connectedEdges);
+		for (const int edge : connectedEdges) {
+			double value = 0;
+
+			// Get the vertex on the other side of the edge
+			int adjVertex, thirdVertex;
+			int2 edgeVertices;
+			meshFn.getEdgeVertices(edge, edgeVertices);
+			if (edgeVertices[0] == currVertex) {
+				adjVertex = edgeVertices[1];
+			} else {
+				adjVertex = edgeVertices[0];
+			}
+
+
+			edge_it.setIndex(edge, _);
+			edge_it.getConnectedFaces(connectedFaces);
+			for (const int face : connectedFaces) {
+				polygon_it.setIndex(face, _);
+				polygon_it.getVertices(polygonVertices);
+
+				// Get the third polygon vertex
+				for (const int vertex : polygonVertices) {
+					if (vertex != currVertex && vertex != adjVertex) {
+						thirdVertex = vertex;
+					}
+				}
+				// Get the physical points on the triangle
+				MPoint left, center, right;
+				meshFn.getPoint(adjVertex, left);
+				meshFn.getPoint(thirdVertex, center);
+				meshFn.getPoint(currVertex, right);
+
+				// Calculate the value to add to the sum
+				value += (center - left) * (center - right) / (center - left ^ center - right).length();
+			}
+
+			
+			// If the 2nd vertex is on the boundary, subtract the sum from the rhs,
+			// and if not set it as the matrix element
+			vertex_it.setIndex(adjVertex, _);
+			if (vertex_it.onBoundary()) {
+				rhs(indexMap[adjVertex], 0) = -u[adjVertex] * value;
+				rhs(indexMap[adjVertex], 1) = -v[adjVertex] * value;
+			} else {
+				weight_matrix(indexMap[currVertex], indexMap[adjVertex]) = value;
+			}
+
+			rowSum += value;
+		}
+		weight_matrix(currRow, currRow) = -rowSum;
+	}
 
 	// Transfer matrices to MatLab
 	int result = MatlabGMMDataExchange::SetEngineDenseMatrix("rhs", rhs);
@@ -167,8 +231,76 @@ void meanValueWeights(const MFnMesh& meshFn, MFloatArray& u, MFloatArray& v,
 	GMMDenseColMatrix rhs(rowCount, 2);
 
 	MItMeshVertex vertex_it(meshFn.object());
+	MItMeshEdge edge_it(meshFn.object());
+	MItMeshPolygon polygon_it(meshFn.object());
 
-	// Initialize the matrix here, TODO
+	MIntArray connectedEdges, connectedFaces, polygonVertices;
+
+	// Initialize the matrix
+	for (unsigned int currRow = 0; currRow < rowCount; ++currRow) {
+		const int currVertex = rowMap[currRow];
+
+		int _;
+		double rowSum = 0;
+		vertex_it.setIndex(currVertex, _);
+		vertex_it.getConnectedEdges(connectedEdges);
+		for (const int edge : connectedEdges) {
+			double value = 0;
+
+			// Get the vertex on the other side of the edge
+			int adjVertex, thirdVertex;
+			int2 edgeVertices;
+			meshFn.getEdgeVertices(edge, edgeVertices);
+			if (edgeVertices[0] == currVertex) {
+				adjVertex = edgeVertices[1];
+			} else {
+				adjVertex = edgeVertices[0];
+			}
+
+
+			edge_it.setIndex(edge, _);
+			edge_it.getConnectedFaces(connectedFaces);
+			for (const int face : connectedFaces) {
+				polygon_it.setIndex(face, _);
+				polygon_it.getVertices(polygonVertices);
+
+				// Get the third polygon vertex
+				for (const int vertex : polygonVertices) {
+					if (vertex != currVertex && vertex != adjVertex) {
+						thirdVertex = vertex;
+					}
+				}
+				// Get the physical points on the triangle
+				MPoint left, center, right;
+				meshFn.getPoint(adjVertex, right);
+				meshFn.getPoint(thirdVertex, left);
+				meshFn.getPoint(currVertex, center);
+
+
+				// tan = (|u||v| - u*v ) / |u x v|
+
+				// Calculate the value to add to the sum
+				value += ((center - left).length() * (center - right).length()
+						- (center - left) * (center - right)) / 
+					((center - left ^ center - right).length() *
+							(center - right).length());
+			}
+
+			
+			// If the 2nd vertex is on the boundary, subtract the sum from the rhs,
+			// and if not set it as the matrix element
+			vertex_it.setIndex(adjVertex, _);
+			if (vertex_it.onBoundary()) {
+				rhs(indexMap[adjVertex], 0) = -u[adjVertex] * value;
+				rhs(indexMap[adjVertex], 1) = -v[adjVertex] * value;
+			} else {
+				weight_matrix(indexMap[currVertex], indexMap[adjVertex]) = value;
+			}
+
+			rowSum += value;
+		}
+		weight_matrix(currRow, currRow) = -rowSum;
+	}
 
 	// Transfer matrices to MatLab
 	int result = MatlabGMMDataExchange::SetEngineDenseMatrix("rhs", rhs);
@@ -295,14 +427,15 @@ MStatus harmonicFlatteningCmd::doIt(const MArgList& argList) {
 
 	// Create the 3 (u,v) sets
 	uniformWeights(meshFn, unif_u, unif_v, rowMap, indexMap, rowCount);
-	// cotangentWeights(meshFn, cot_u, cot_v, rowMap, indexMap, rowCount);
-	// meanValueWeights(meshFn, mean_u, mean_v, rowMap, indexMap, rowCount);
+	cotangentWeights(meshFn, cot_u, cot_v, rowMap, indexMap, rowCount);
+	meanValueWeights(meshFn, mean_u, mean_v, rowMap, indexMap, rowCount);
 
 	// Assign the 3 created (u,v) mappings to the mesh
 	createUV(meshFn, unif_u, unif_v, "Uniform Weight Harmonic");
-	// createUV(meshFn, cot_u, cot_v, "Cotangent Weight Harmonic");
-	// createUV(meshFn, mean_u, mean_v, "Mean Value Weight Harmonic");
+	createUV(meshFn, cot_u, cot_v, "Cotangent Weight Harmonic");
+	createUV(meshFn, mean_u, mean_v, "Mean Value Weight Harmonic");
 
+	return MS::kSuccess;
 }
 
 MSyntax harmonicFlatteningCmd::syntax() {
