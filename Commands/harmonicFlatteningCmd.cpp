@@ -91,8 +91,8 @@ void uniformWeights(const MFnMesh& meshFn, MFloatArray& u, MFloatArray& v,
 			++rowSum;
 
 			if (vertex_it.onBoundary()) {
-				rhs(currRow, 0) = - u[vertex];
-				rhs(currRow, 1) = - v[vertex];
+				rhs(currRow, 0) -= u[vertex];
+				rhs(currRow, 1) -= v[vertex];
 			} else {
 				const unsigned int col = indexMap[vertex];
 				weight_matrix(currRow, col) = 1;
@@ -104,6 +104,8 @@ void uniformWeights(const MFnMesh& meshFn, MFloatArray& u, MFloatArray& v,
 	// Transfer matrices to MatLab
 	int result = MatlabGMMDataExchange::SetEngineDenseMatrix("rhs", rhs);
 	result = MatlabGMMDataExchange::SetEngineSparseMatrix("weights", weight_matrix);
+
+
 
 	// Solve for the coordinates
 	MatlabInterface::GetEngine().Eval("weights = weights * -1");
@@ -188,8 +190,8 @@ void cotangentWeights(const MFnMesh& meshFn, MFloatArray& u, MFloatArray& v,
 			// and if not set it as the matrix element
 			vertex_it.setIndex(adjVertex, _);
 			if (vertex_it.onBoundary()) {
-				rhs(indexMap[adjVertex], 0) = -u[adjVertex] * value;
-				rhs(indexMap[adjVertex], 1) = -v[adjVertex] * value;
+				rhs(indexMap[currVertex], 0) -= u[adjVertex] * value;
+				rhs(indexMap[currVertex], 1) -= v[adjVertex] * value;
 			} else {
 				weight_matrix(indexMap[currVertex], indexMap[adjVertex]) = value;
 			}
@@ -291,8 +293,8 @@ void meanValueWeights(const MFnMesh& meshFn, MFloatArray& u, MFloatArray& v,
 			// and if not set it as the matrix element
 			vertex_it.setIndex(adjVertex, _);
 			if (vertex_it.onBoundary()) {
-				rhs(indexMap[adjVertex], 0) = -u[adjVertex] * value;
-				rhs(indexMap[adjVertex], 1) = -v[adjVertex] * value;
+				rhs(indexMap[currVertex], 0) -= u[adjVertex] * value;
+				rhs(indexMap[currVertex], 1) -= v[adjVertex] * value;
 			} else {
 				weight_matrix(indexMap[currVertex], indexMap[adjVertex]) = value;
 			}
@@ -305,6 +307,7 @@ void meanValueWeights(const MFnMesh& meshFn, MFloatArray& u, MFloatArray& v,
 	// Transfer matrices to MatLab
 	int result = MatlabGMMDataExchange::SetEngineDenseMatrix("rhs", rhs);
 	result = MatlabGMMDataExchange::SetEngineSparseMatrix("weights", weight_matrix);
+
 
 	// Solve for the coordinates, using LU as the matrix isn't symmetric positive semi-definite
 	MatlabInterface::GetEngine().Eval("coords = solve_linear_system_with_LU(weights, rhs)");
