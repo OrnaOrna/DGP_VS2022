@@ -11,7 +11,7 @@ double getAngleBetweenVertices(const MPoint& left, const MPoint& center, const M
 
 void getGaussianCurvature(const MFnMesh& meshFn, std::map<int, double>& curvature)
 {
-	MItMeshVertex vertex_it = meshFn.object();
+	MItMeshVertex vertex_it{meshFn.object()};
 	MItMeshPolygon face_it = meshFn.object();
 	while (!vertex_it.isDone())
 	{
@@ -31,7 +31,7 @@ void getGaussianCurvature(const MFnMesh& meshFn, std::map<int, double>& curvatur
 	while (!face_it.isDone())
 	{
 		face_it.getVertices(vertices);
-		int numVertices = vertices.length();
+		const int numVertices = vertices.length();
 		points.setLength(numVertices);
 		for (int i = 0; i < numVertices; ++i)
 		{
@@ -143,4 +143,13 @@ void getBoundary(const MFnMesh& meshFn,	std::list<int> &vertices) {
 			}
 		}
 	} while (currIndex != startIndex);
+}
+
+void createUV(MFnMesh& meshFn, const MFloatArray& u, const MFloatArray& v, const char* name) {
+	const MString uvName = name;
+	meshFn.createUVSetWithName(uvName);
+	meshFn.setUVs(u, v, &uvName);
+	MIntArray uvCounts, uvIds;
+	meshFn.getVertices(uvCounts, uvIds);
+	meshFn.assignUVs(uvCounts, uvIds, &uvName);
 }

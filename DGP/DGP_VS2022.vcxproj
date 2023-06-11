@@ -14,6 +14,7 @@
     <ClCompile Include="..\Commands\colorMeshVerticesCmd.cpp" />
     <ClCompile Include="..\Commands\harmonicFlatteningCmd.cpp" />
     <ClCompile Include="..\Commands\inverseMatrixCmd.cpp" />
+    <ClCompile Include="..\Commands\LSCMCmd.cpp" />
     <ClCompile Include="..\Commands\topologyStatisticsCmd.cpp" />
     <ClCompile Include="..\Commands\TriangulatePolygonCmd.cpp" />
     <ClCompile Include="..\helpers.cpp" />
@@ -32,6 +33,7 @@
     <ClInclude Include="..\Commands\colorMeshVerticesCmd.h" />
     <ClInclude Include="..\Commands\harmonicFlatteningCmd.h" />
     <ClInclude Include="..\Commands\inverseMatrixCmd.h" />
+    <ClInclude Include="..\Commands\LSCMCmd.h" />
     <ClInclude Include="..\Commands\topologyStatisticsCmd.h" />
     <ClInclude Include="..\Commands\TriangulatePolygonCmd.h" />
     <ClInclude Include="..\helpers.h" />

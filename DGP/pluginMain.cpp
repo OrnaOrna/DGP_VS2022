@@ -15,6 +15,7 @@
 #include "Commands/inverseMatrixCmd.h"
 #include "Commands/topologyStatisticsCmd.h"
 #include "Commands/harmonicFlatteningCmd.h"
+#include "Commands/LSCMCmd.h"
 
 MStatus initializePlugin(MObject obj)
 { 
@@ -33,7 +34,7 @@ MStatus initializePlugin(MObject obj)
 	REGISTER_COMMAND_WITH_SYNTAX(plugin, colorMeshVerticesCmd);
 	REGISTER_COMMAND_WITH_SYNTAX(plugin, inverseMatrixCmd);
 	REGISTER_COMMAND_WITH_SYNTAX(plugin, harmonicFlatteningCmd);
-	
+	REGISTER_COMMAND_WITH_SYNTAX(plugin, LSCMCmd);
 
 	return MS::kSuccess;
 }
@@ -50,6 +51,7 @@ MStatus uninitializePlugin(MObject obj)
 	DEREGISTER_COMMAND(plugin, topologyStatisticsCmd);
 	DEREGISTER_COMMAND(plugin, inverseMatrixCmd);
 	DEREGISTER_COMMAND(plugin, harmonicFlatteningCmd);
+	DEREGISTER_COMMAND(plugin, LSCMCmd);
 
 	return MS::kSuccess;
 }

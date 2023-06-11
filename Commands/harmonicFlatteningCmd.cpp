@@ -53,8 +53,8 @@ unsigned int calculateBoundaryCoords(const MFnMesh& meshFn, MFloatArray& u, MFlo
 
 // Initialize a map between rows in coordinate matrix and indexes in the mesh,
 // and the other way around
-void createMaps(const MFnMesh& meshFn, MIntArray& rowMap, 
-				std::map<int,int>& indexMap, unsigned int rowCount) {
+void createMaps(const MFnMesh& meshFn, MIntArray& rowMap,
+                std::map<int, int>& indexMap) {
 	MItMeshVertex vertex_it(meshFn.object());
 	int row = 0;
 	while (!vertex_it.isDone()) {
@@ -326,18 +326,6 @@ void meanValueWeights(const MFnMesh& meshFn, MFloatArray& u, MFloatArray& v,
 	}
 }
 
-
-
-// Create a UV set with given name and set it properly
-void createUV(MFnMesh& meshFn, const MFloatArray& u, const MFloatArray& v, const char* name) {
-	const MString uvName = name;
-	meshFn.createUVSetWithName(uvName);
-	meshFn.setUVs(u, v, &uvName);
-	MIntArray uvCounts, uvIds;
-	meshFn.getVertices(uvCounts, uvIds);
-	meshFn.assignUVs(uvCounts, uvIds, &uvName);
-}
-
 harmonicFlatteningCmd::harmonicFlatteningCmd() = default;
 
 void* harmonicFlatteningCmd::creator() {
@@ -359,7 +347,7 @@ MStatus harmonicFlatteningCmd::doIt(const MArgList& argList) {
 
 	const MSyntax commandSyntax = syntax();
 
-	MArgDatabase argData(commandSyntax, argList, &stat);
+	const MArgDatabase argData(commandSyntax, argList, &stat);
 	MCHECKERROR(stat, "Wrong syntax for command " + commandName());
 
 	MSelectionList objectsList;
@@ -378,7 +366,7 @@ MStatus harmonicFlatteningCmd::doIt(const MArgList& argList) {
 	MCHECKERROR(stat, "Can't access mesh");
 
 	// Check that the mesh is indeed a triangle mesh
-		int numPolygons = meshFn.numPolygons(&stat);
+	const int numPolygons = meshFn.numPolygons(&stat);
 
 	MItMeshPolygon poly(meshObject);
 	if(!poly.isPlanar(&stat) || poly.isLamina(&stat) || poly.isHoled(&stat))
@@ -387,10 +375,9 @@ MStatus harmonicFlatteningCmd::doIt(const MArgList& argList) {
 		MCHECKERROR(MS::kFailure, "The given polygon shape is either self intersecting, holed or non-planar which are not supported");
 	}
 
-	unsigned int temp; 
 	for (int i=0; i<numPolygons; i++)
 	{
-		temp=poly.polygonVertexCount();
+		const unsigned int temp = poly.polygonVertexCount();
 		if ( 3 != temp )
 			MCHECKERROR(MS::kFailure, "this is not a triangle mesh!");
 		poly.next();
@@ -426,7 +413,7 @@ MStatus harmonicFlatteningCmd::doIt(const MArgList& argList) {
 
 	MIntArray rowMap(rowCount);
 	std::map<int, int> indexMap;
-	createMaps(meshFn, rowMap, indexMap, rowCount);
+	createMaps(meshFn, rowMap, indexMap);
 
 	// Create the 3 (u,v) sets
 	uniformWeights(meshFn, unif_u, unif_v, rowMap, indexMap, rowCount);
