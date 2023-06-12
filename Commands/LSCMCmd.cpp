@@ -7,7 +7,8 @@
 #include "Utils/MatlabGMMDataExchange.h"
 #include "Utils/MatlabInterface.h"
 
-bool isNotFixed(const int& index, const int2& fixed) {
+
+int isNotFixed(const int& index, const int2& fixed) {
 	return index != fixed[0] && index != fixed[1];
 }
 
@@ -114,12 +115,14 @@ void LSCMWeights(const MFnMesh& meshFn, MFloatArray& u, MFloatArray& v,
 			if (isNotFixed(second_v, fixed)) {
 				weights(indexMap[first_v], indexMap[second_v]) += {beta, -1};
 			} else {
-				rhs(indexMap[first_v], 0) -= {beta, -1};
+				rhs(indexMap[first_v], 0) -= std::complex<double>(u[second_v], v[second_v])
+												* std::complex<double>(beta, -1);
 			}
 			if (isNotFixed(third_v, fixed)) {
 				weights(indexMap[first_v], indexMap[third_v]) += {gamma, 1};
 			} else {
-				rhs(indexMap[first_v], 0) -= {gamma, 1};
+				rhs(indexMap[first_v], 0) -= std::complex<double>(u[third_v], v[third_v]) *
+												  std::complex<double>(gamma, 1);
 			}
 		}
 
@@ -128,12 +131,14 @@ void LSCMWeights(const MFnMesh& meshFn, MFloatArray& u, MFloatArray& v,
 			if (isNotFixed(third_v, fixed)) {
 				weights(indexMap[second_v], indexMap[third_v]) += {alpha, -1};
 			} else {
-				rhs(indexMap[second_v], 0) -= {alpha, -1};
+				rhs(indexMap[second_v], 0) -= std::complex<double>(u[third_v], v[third_v])
+												 * std::complex<double>(alpha, -1);
 			}
 			if (isNotFixed(first_v, fixed)) {
 				weights(indexMap[second_v], indexMap[first_v]) += {beta, 1};
 			} else {
-				rhs(indexMap[second_v], 0) -= {beta, 1};
+				rhs(indexMap[second_v], 0) -= std::complex<double>(u[first_v], v[first_v])
+												 * std::complex<double>(beta, 1);
 			}
 		}
 
@@ -142,16 +147,16 @@ void LSCMWeights(const MFnMesh& meshFn, MFloatArray& u, MFloatArray& v,
 			if (isNotFixed(second_v, fixed)) {
 				weights(indexMap[third_v], indexMap[second_v]) += {alpha, 1};
 			} else {
-				rhs(indexMap[third_v], 0) -= {alpha, 1};
+				rhs(indexMap[third_v], 0) -= std::complex<double>(u[second_v], v[second_v])
+												* std::complex<double>(alpha, 1);
 			}
 			if (isNotFixed(first_v, fixed)) {
 				weights(indexMap[third_v], indexMap[first_v]) += {gamma, -1};
 			} else {
-				rhs(indexMap[third_v], 0) -= {gamma, -1};
+				rhs(indexMap[third_v], 0) -= std::complex<double>(u[first_v], v[first_v])
+												* std::complex<double>(gamma, -1);;
 			}
-
 		}
-
 		poly_it.next();
 	}
 
