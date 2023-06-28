@@ -30,7 +30,7 @@ global proc shelf_DGP () {
         -image "deleteTextRefObj.png" 
         -image1 "deleteTextRefObj.png" 
         -style "iconOnly" 
-        -marginWidth 1
+        -marginWidth 0
         -marginHeight 1
         -command "DeleteHistory;" 
         -sourceType "mel" 
@@ -63,7 +63,7 @@ global proc shelf_DGP () {
         -image "menuIconMode.png" 
         -image1 "menuIconMode.png" 
         -style "iconOnly" 
-        -marginWidth 1
+        -marginWidth 0
         -marginHeight 1
         -command "string $code_path = `getenv \"DGP_CODE_DIR\"`;\t\n$source_command = \"source \\\"\" + $code_path + \"/MEL/DGP.mel\" + \"\\\";\";\t\neval $source_command;\n\ntogglePluginManagerWindow();" 
         -sourceType "mel" 
@@ -96,7 +96,7 @@ global proc shelf_DGP () {
         -image "polyCreateFacet.png" 
         -image1 "polyCreateFacet.png" 
         -style "iconOnly" 
-        -marginWidth 1
+        -marginWidth 0
         -marginHeight 1
         -command "source \"DGP.mel\";\ncreatePolygonalCage();\n" 
         -sourceType "mel" 
@@ -129,7 +129,7 @@ global proc shelf_DGP () {
         -image "polyFace.png" 
         -image1 "polyFace.png" 
         -style "iconOnly" 
-        -marginWidth 1
+        -marginWidth 0
         -marginHeight 1
         -command "triangulatePolygon -numWantedVertices 10000" 
         -sourceType "mel" 
@@ -162,7 +162,7 @@ global proc shelf_DGP () {
         -image "commandButton.png" 
         -image1 "commandButton.png" 
         -style "iconOnly" 
-        -marginWidth 1
+        -marginWidth 0
         -marginHeight 1
         -command "triangulatePolygon -numWantedVertices 1000 -subsampleBoundary false;\n" 
         -sourceType "mel" 
@@ -195,7 +195,7 @@ global proc shelf_DGP () {
         -image "brush.png" 
         -image1 "brush.png" 
         -style "iconOnly" 
-        -marginWidth 1
+        -marginWidth 0
         -marginHeight 1
         -command "colorMeshVerticesCmd -min -6.28 -max 6.28;" 
         -sourceType "mel" 
@@ -229,7 +229,7 @@ global proc shelf_DGP () {
         -image "commandButton.png" 
         -image1 "commandButton.png" 
         -style "iconOnly" 
-        -marginWidth 1
+        -marginWidth 0
         -marginHeight 1
         -command "inverseMatrixCmd 8 1 6 3 5 7 4 9 2" 
         -sourceType "mel" 
@@ -263,7 +263,7 @@ global proc shelf_DGP () {
         -image "commandButton.png" 
         -image1 "commandButton.png" 
         -style "iconOnly" 
-        -marginWidth 1
+        -marginWidth 0
         -marginHeight 1
         -command "string $code_path = `getenv \"DGP_CODE_DIR\"`;\t\n$source_command = \"source \\\"\" + $code_path + \"/MEL/DGP.mel\" + \"\\\";\";\t\neval $source_command;\n\ncreateBackgroundImage();" 
         -sourceType "mel" 
@@ -297,7 +297,7 @@ global proc shelf_DGP () {
         -image "commandButton.png" 
         -image1 "commandButton.png" 
         -style "iconOnly" 
-        -marginWidth 1
+        -marginWidth 0
         -marginHeight 1
         -command "string $code_path = `getenv \"DGP_CODE_DIR\"`;\t\n$source_command = \"source \\\"\" + $code_path + \"/MEL/DGP.mel\" + \"\\\";\";\t\neval $source_command;\t\n\ntriangulateCage(15000);" 
         -sourceType "mel" 
@@ -331,7 +331,7 @@ global proc shelf_DGP () {
         -image "commandButton.png" 
         -image1 "commandButton.png" 
         -style "iconOnly" 
-        -marginWidth 1
+        -marginWidth 0
         -marginHeight 1
         -command "colorMeshVerticesCmd" 
         -sourceType "mel" 
@@ -365,7 +365,7 @@ global proc shelf_DGP () {
         -image "commandButton.png" 
         -image1 "commandButton.png" 
         -style "iconOnly" 
-        -marginWidth 1
+        -marginWidth 0
         -marginHeight 1
         -command "topologyStatisticsCmd" 
         -sourceType "mel" 
