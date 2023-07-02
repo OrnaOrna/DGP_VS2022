@@ -78,11 +78,20 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 		// Multiply matrices in the GPU
 		MatlabGMMDataExchange::SetEngineDenseMatrix("cage", mCageVertices);
 		MatlabInterface::GetEngine().Eval("gpu_cage = gpuArray(cage)");
-		MatlabInterface::GetEngine().Eval("gpu_internal = gpu_coords * cage");
+		if (coordinateType == 0 ) {
+			MatlabInterface::GetEngine().Eval("gpu_internal = gpu_coords * gpu_cage");
+		} else if (coordinateType == 1) {
+			MatlabInterface::GetEngine().Eval("gpu_internal = gpu_interpol_coords * gpu_cage");
+		}
 		MatlabInterface::GetEngine().Eval("internal = gather(gpu_internal)");
 		MatlabGMMDataExchange::GetEngineDenseMatrix("internal", mInternalPoints);
 	#else
-		mult(mCoordinates, mCageVertices, mInternalPoints);
+		if (coordinateType == 0) {
+			mult(mCoordinates, mCageVertices, mInternalPoints);	
+		} else if (coordinateType == 1) {
+			mult(mInterpolCoordinates, mCageVertices, mInternalPoints);	
+		}
+		
 	#endif
 
 
@@ -161,6 +170,9 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter)
 	clear(mShiftedCageVertices);
 	resize(mShiftedCageVertices, n, 1);
 
+	clear(mInterpolCoordinates);
+	resize(mInterpolCoordinates, m, n);
+
 	const Complex imag_unit = {0, 1};
 
 	// First, create the shifted mesh
@@ -216,10 +228,41 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter)
 			mCoordinates(i, j) = K;
 		}
 	}
+
+	// The intermediate matrix. size n x n
+	GMMDenseComplexColMatrix interpolMidMatrix(n, n);
+
+
+	// For part 2, calculate the intermediate matrix
+	for (int i = 0; i < n; ++i) {
+		for (int j = 0; j < n; ++j) {
+			Complex z0 = mCageVertices(i, 0);
+
+			Complex zj0 = mShiftedCageVertices((n+j-1)%n, 0);
+			Complex zj = mShiftedCageVertices(j, 0);
+			Complex zj1 = mShiftedCageVertices((j+1) % n, 0);
+
+			// A_j's and B_j's in the formula
+			Complex Bj0 = zj0 - z0, Bj = zj - z0, Bj1 = zj1 - z0,
+					Aj = zj - zj0, Aj1 = zj1 - zj;
+
+			const Complex K = 1.0 / (2 * M_PI * imag_unit) * (Bj1 / Aj1 * log(Bj1 / Bj) -
+				Bj0 / Aj * log(Bj / Bj0));
+
+			interpolMidMatrix(i, j) = K;
+		}
+	}
+
+	// Calculate the interpolating coordinates
+	MatlabGMMDataExchange::SetEngineDenseMatrix("coords", mCoordinates);
+	MatlabGMMDataExchange::SetEngineDenseMatrix("intermediate", interpolMidMatrix);
+	MatlabInterface::GetEngine().EvalToCout("interpol_coords = coords / intermediate");
+	MatlabGMMDataExchange::GetEngineDenseMatrix("interpol_coords", mInterpolCoordinates);
+
 	#ifdef GPU_PROC
-		// Transfer matrix to MatLab and set it as a GPUArray
-		MatlabGMMDataExchange::SetEngineDenseMatrix("coords", mCoordinates);
+		// Transfer matrices to MatLab and set them as GPUArrays
 		MatlabInterface::GetEngine().Eval("gpu_coords = gpuArray(coords)");
+		MatlabInterface::GetEngine().Eval("gpu_interpol_coords = gpuArray(interpol_coords)");
 	#endif
 
 
