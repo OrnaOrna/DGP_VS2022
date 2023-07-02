@@ -125,3 +125,22 @@ discrete conformal map. firstly, it will fix 2 boundary vertices to (0,0) and (0
 first one is bigget than half of the boundary length).
 The Laplacian matrix is constructed by iterating over the polygons (to be able to not differentiate between interior
 and boundary vertex in the calculation).
+
+
+------- Ex3 Plugin -------
+
+this plugin implements the SpaceDeformer2D node, which allows 2D shape deformation using 2 methods --
+Cauchy-Green coordinates and (bonus) vertex-interpolating Cauchy coordinates.
+
+Defining or undefining GPU_PROC in SpaceDeformer2D.h will change whether the computations are done on the cpu
+via gmm's matrix multiplication function (if undefined) or on the gpu using matlab's parallel computing
+toolbox (if defined). The second method should work but it is sadly untested, since Yair has no compatible gpu
+and Tal has not enough free space on his computer to download the toolbox.
+
+The syntax to use the deformer node is as explained in the guide -- use the image command in the DGP shelf
+to create the cage, then use the TriangulatePolygonCmd command to triangulate it. Then choose using the channel
+box which of the two deformation methods should be used, and manipulate the cage using maya's provided tools.
+The interior of the image should deform in real time.
+---------------------------
+
+
