@@ -1,3 +1,3 @@
 # DGP_VS2022
 Homework for the course Digital Geometry Processing
-For now only has skeleton code for EX1
+Has all 3 assignments, including the bonus in assignment 3 and the first bonus in assignment 5 
